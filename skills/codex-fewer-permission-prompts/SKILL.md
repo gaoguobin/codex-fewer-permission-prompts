@@ -1,6 +1,6 @@
 ---
 name: codex-fewer-permission-prompts
-description: Safely reduce repeated Codex permission prompts by scanning local Codex history for frequent low-risk command prefixes, proposing official prefix_rule entries, verifying with codex execpolicy check, applying with backups and sentinel blocks, and rolling back. Use for fewer permission prompts, Codex rules suggestions, execpolicy allowlist cleanup, lifecycle install/update/uninstall, or slash-style text such as /fewer-permission-prompts doctor, propose, apply, verify, or rollback.
+description: Codex permission prompts helper for safe prefix_rule proposals, execpolicy verification, dry-run apply, and rollback. Use for fewer permission prompts, Codex rules allowlist cleanup, or /fewer-permission-prompts doctor/propose/apply/verify/rollback.
 ---
 
 # Codex Fewer Permission Prompts

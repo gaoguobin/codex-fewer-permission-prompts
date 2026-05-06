@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""Validate repository metadata for skill and plugin discovery."""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python < 3.11 in CI.
+    import tomli as tomllib  # type: ignore[no-redef]
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SKILL_NAME = "codex-fewer-permission-prompts"
+SKILL_PATH = Path("skills") / SKILL_NAME / "SKILL.md"
+
+
+def fail(message: str) -> None:
+    print(f"metadata check failed: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def parse_frontmatter(path: Path) -> dict[str, str]:
+    text = path.read_text(encoding="utf-8")
+    match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    if not match:
+        fail(f"{path} is missing YAML frontmatter")
+    fields: dict[str, str] = {}
+    for line in match.group(1).splitlines():
+        if ":" not in line:
+            fail(f"{path} has invalid frontmatter line: {line}")
+        key, value = line.split(":", 1)
+        fields[key.strip()] = value.strip()
+    return fields
+
+
+def anchor_for(heading: str) -> str:
+    anchor = re.sub(r"[^a-z0-9 -]", "", heading.lower()).strip().replace(" ", "-")
+    return re.sub(r"-+", "-", anchor)
+
+
+def check_readme() -> None:
+    path = ROOT / "README.md"
+    if not path.exists():
+        fail("README.md is missing")
+    text = path.read_text(encoding="utf-8")
+    required = [
+        "Agent Skill and Discovery",
+        f"`{SKILL_NAME}`",
+        f"`{SKILL_PATH.as_posix()}`",
+        "Plugin Readiness",
+        "Safety Model",
+        "SkillsMP",
+        "not an official OpenAI plugin",
+    ]
+    for snippet in required:
+        if snippet not in text:
+            fail(f"README.md is missing required discovery text: {snippet}")
+
+    anchors = {"chinese"}
+    for line in text.splitlines():
+        match = re.match(r"^(#+)\s+(.+?)\s*$", line)
+        if match:
+            anchors.add(anchor_for(match.group(2)))
+
+    for link in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+        if link.startswith("#") and link[1:] not in anchors:
+            fail(f"README.md has broken anchor: {link}")
+
+
+def check_skills() -> None:
+    root_skill = ROOT / "SKILL.md"
+    bundled_skill = ROOT / SKILL_PATH
+    if root_skill.read_text(encoding="utf-8") != bundled_skill.read_text(encoding="utf-8"):
+        fail("root SKILL.md and bundled skill SKILL.md differ")
+
+    for path in (root_skill, bundled_skill):
+        fields = parse_frontmatter(path)
+        if set(fields) != {"name", "description"}:
+            fail(f"{path} frontmatter must contain only name and description")
+        if fields["name"] != SKILL_NAME:
+            fail(f"{path} has unexpected skill name: {fields['name']}")
+        if len(fields["description"]) > 300:
+            fail(f"{path} description is too long for skill indexes")
+        for token in ("Codex", "permission prompts", "prefix_rule", "execpolicy"):
+            if token not in fields["description"]:
+                fail(f"{path} description is missing search token: {token}")
+
+
+def check_plugin_manifest() -> None:
+    path = ROOT / ".codex-plugin" / "plugin.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if manifest.get("name") != SKILL_NAME:
+        fail("plugin manifest name does not match skill name")
+    if manifest.get("skills") != "./skills/":
+        fail("plugin manifest skills path must be ./skills/")
+    keywords = set(manifest.get("keywords", []))
+    for keyword in ("agent-skills", "codex-plugin", "skillsmp", "prefix-rule"):
+        if keyword not in keywords:
+            fail(f"plugin manifest missing keyword: {keyword}")
+    interface = manifest.get("interface", {})
+    if not interface.get("displayName") or not interface.get("shortDescription"):
+        fail("plugin manifest interface metadata is incomplete")
+
+
+def check_pyproject() -> None:
+    path = ROOT / "pyproject.toml"
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    project = data.get("project", {})
+    if project.get("readme") != "README.md":
+        fail("pyproject readme must point to README.md")
+    keywords = set(project.get("keywords", []))
+    for keyword in ("agent-skill", "codex-plugin", "skillsmp", "prefix-rule"):
+        if keyword not in keywords:
+            fail(f"pyproject missing keyword: {keyword}")
+    urls = project.get("urls", {})
+    for key in ("Homepage", "Repository", "Issues", "Documentation"):
+        if key not in urls:
+            fail(f"pyproject missing project.urls.{key}")
+
+
+def main() -> int:
+    check_readme()
+    check_skills()
+    check_plugin_manifest()
+    check_pyproject()
+    print("metadata-ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

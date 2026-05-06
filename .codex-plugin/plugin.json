@@ -10,11 +10,17 @@
   "repository": "https://github.com/gaoguobin/codex-fewer-permission-prompts",
   "keywords": [
     "agent-skills",
+    "agent-skill",
     "codex",
     "openai-codex",
     "codex-skill",
+    "codex-plugin",
+    "skillsmp",
     "permissions",
+    "permission-prompts",
+    "fewer-permission-prompts",
     "rules",
+    "prefix-rule",
     "execpolicy"
   ],
   "skills": "./skills/",
@@ -27,9 +33,11 @@
     "capabilities": [
       "Local workflow",
       "Rules analysis",
+      "Permission prompts",
       "Rollback"
     ],
     "websiteURL": "https://github.com/gaoguobin/codex-fewer-permission-prompts",
+    "privacyPolicyURL": "https://github.com/gaoguobin/codex-fewer-permission-prompts#safety-model",
     "defaultPrompt": [
       "/fewer-permission-prompts doctor",
       "/fewer-permission-prompts propose",
