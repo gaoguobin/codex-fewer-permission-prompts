@@ -100,12 +100,14 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 
 The install flow clones this repository to
 `~/.codex/codex-fewer-permission-prompts`, installs the Python package in
-editable user mode, and links the bundled skill directory directly into
-`~/.agents/skills/codex-fewer-permission-prompts`.
+editable user mode, copies the bundled skill into a standalone mirror at
+`~/.codex/codex-fewer-permission-prompts-skill/codex-fewer-permission-prompts`,
+and links that mirror into `~/.agents/skills/codex-fewer-permission-prompts`.
 
-The junction points to `skills/codex-fewer-permission-prompts`, not to the
-parent `skills` directory, so Codex skill menus can show the single command
-label `Codex Fewer Permission Prompts` without a namespace prefix.
+The source repo still contains plugin-ready metadata under `.codex-plugin`.
+The user-facing skill path points outside that plugin repo so Codex skill menus
+can show the single command label `Codex Fewer Permission Prompts` without the
+plugin namespace prefix.
 
 After installation, fully restart Codex App and open a new conversation, or
 open a new Codex CLI process so skill discovery refreshes. Existing threads may
@@ -202,8 +204,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 The update flow pulls the installed repository, reinstalls the editable Python
-package, migrates legacy namespace-style junctions to the direct skill junction
-when needed, and runs `doctor`.
+package, refreshes the standalone skill mirror, migrates legacy namespace-style
+or repo-internal skill junctions to the standalone skill junction when needed,
+and runs `doctor`.
 
 After update, fully restart Codex App and open a new conversation, or open a new
 Codex CLI process. Do not use the old update thread to judge whether `/` menu
@@ -219,8 +222,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 
 The uninstall flow removes this tool's sentinel block from the default rules
 file, uninstalls the Python package, removes the current or legacy skill
-junction, and deletes the installed repository. It preserves unrelated rules and
-unrelated skills.
+junction, deletes the standalone skill mirror, and deletes the installed
+repository. It preserves unrelated rules and unrelated skills.
 
 ## Safety Model
 
@@ -293,10 +296,12 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 安装流程会把仓库克隆到 `~/.codex/codex-fewer-permission-prompts`，以 editable user 模式安装 Python
-包，并把内层 skill 目录直接链接到 `~/.agents/skills/codex-fewer-permission-prompts`。
+包，把内层 skill 复制到独立 mirror
+`~/.codex/codex-fewer-permission-prompts-skill/codex-fewer-permission-prompts`，
+再把这个 mirror 链接到 `~/.agents/skills/codex-fewer-permission-prompts`。
 
-这个 junction 指向 `skills/codex-fewer-permission-prompts`，不是父级 `skills` 目录；
-这样 Codex 的 skill 菜单可以只显示 `Codex Fewer Permission Prompts`，不带 namespace 前缀。
+源码仓库仍然保留 `.codex-plugin` 作为 plugin-ready 元数据；用户实际加载的 skill 目录在 plugin
+仓库外面。这样 Codex 的 skill 菜单可以只显示 `Codex Fewer Permission Prompts`，不带 plugin namespace 前缀。
 
 安装后需要完全重启 Codex App 并新开一个对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
 旧 thread 可能缓存安装前的 skill 菜单，不适合用来判断 `/` 菜单是否刷新。

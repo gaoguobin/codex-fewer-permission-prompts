@@ -14,7 +14,7 @@ Uninstall removes only this tool's skill, package, repo, and sentinel block from
 
 If the user explicitly wants to keep the applied permission rules, skip the `rollback --remove-block` line. Otherwise keep it: the command backs up the rules file first and removes only the `codex-fewer-permission-prompts` sentinel block.
 
-If the Codex environment uses sandbox or approval controls, request approval/escalation for uninstall because it may edit `%USERPROFILE%\.codex\rules\default.rules`, uninstall a Python package, remove a junction under `%USERPROFILE%\.agents`, and delete `%USERPROFILE%\.codex\codex-fewer-permission-prompts`.
+If the Codex environment uses sandbox or approval controls, request approval/escalation for uninstall because it may edit `%USERPROFILE%\.codex\rules\default.rules`, uninstall a Python package, remove a junction under `%USERPROFILE%\.agents`, and delete `%USERPROFILE%\.codex\codex-fewer-permission-prompts` and `%USERPROFILE%\.codex\codex-fewer-permission-prompts-skill`.
 
 If any command fails because of permissions, sandbox write limits, process locks, or junction removal, do not try unrelated workarounds. Ask for approval and rerun the same intended uninstall step.
 
@@ -22,10 +22,12 @@ Run this PowerShell block exactly:
 
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
+$skillMirrorRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts-skill'
+$skillMirror = Join-Path $skillMirrorRoot 'codex-fewer-permission-prompts'
 $skillLink = Join-Path $HOME '.agents\skills\codex-fewer-permission-prompts'
 $legacyNamespace = Join-Path $HOME '.agents\skills\codex-permission-tools'
 $legacyParentTarget = Join-Path $repoRoot 'skills'
-$skillTarget = Join-Path $repoRoot 'skills\codex-fewer-permission-prompts'
+$legacyInnerTarget = Join-Path $repoRoot 'skills\codex-fewer-permission-prompts'
 $rulesFile = Join-Path $HOME '.codex\rules\default.rules'
 
 function Test-JunctionTarget($path, $target) {
@@ -62,8 +64,12 @@ if (Test-Path $repoRoot) {
 
 python -m pip uninstall -y codex-fewer-permission-prompts
 
-Remove-ExpectedJunction $skillLink @($legacyParentTarget, $skillTarget)
-Remove-ExpectedJunction $legacyNamespace @($legacyParentTarget, $skillTarget)
+Remove-ExpectedJunction $skillLink @($legacyParentTarget, $legacyInnerTarget, $skillMirror)
+Remove-ExpectedJunction $legacyNamespace @($legacyParentTarget, $legacyInnerTarget, $skillMirror)
+
+if (Test-Path $skillMirrorRoot) {
+    Remove-Item -LiteralPath $skillMirrorRoot -Recurse -Force
+}
 
 if (Test-Path $repoRoot) {
     Remove-Item -LiteralPath $repoRoot -Recurse -Force

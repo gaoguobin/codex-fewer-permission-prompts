@@ -20,6 +20,7 @@ PLUGIN_NAME = "codex-permission-tools"
 LEGACY_NAMESPACE = "codex-permission-tools"
 SKILL_PATH = Path("skills") / SKILL_NAME / "SKILL.md"
 DIRECT_SKILL_LINK = f".agents/skills/{SKILL_NAME}"
+STANDALONE_SKILL_MIRROR = f".codex/{SKILL_NAME}-skill/{SKILL_NAME}"
 
 
 def fail(message: str) -> None:
@@ -64,7 +65,9 @@ def check_readme() -> None:
         "SkillsMP",
         f"`{PLUGIN_NAME}`",
         f"`~/{DIRECT_SKILL_LINK}`",
-        "without a namespace prefix",
+        f"`~/{STANDALONE_SKILL_MIRROR}`",
+        "standalone skill mirror",
+        "plugin namespace prefix",
         "open a new conversation",
         "旧 thread",
         "not an official OpenAI plugin",
@@ -130,15 +133,19 @@ def check_codex_docs() -> None:
     for name, path in docs.items():
         text = path.read_text(encoding="utf-8")
         if ".agents\\skills" not in text or SKILL_NAME not in text:
-            fail(f".codex/{name} does not mention the direct skill junction")
+            fail(f".codex/{name} does not mention the user skill junction")
+        if "codex-fewer-permission-prompts-skill" not in text:
+            fail(f".codex/{name} does not mention the standalone skill mirror")
     for name in ("INSTALL.md", "UPDATE.md"):
         text = docs[name].read_text(encoding="utf-8")
         if "旧 thread" not in text or "新开一个对话" not in text:
             fail(f".codex/{name} must warn that existing threads may cache skill menus")
+        if "skillMirror" not in text:
+            fail(f".codex/{name} must create or refresh the standalone skill mirror")
     update_text = docs["UPDATE.md"].read_text(encoding="utf-8")
     uninstall_text = docs["UNINSTALL.md"].read_text(encoding="utf-8")
     for name, text in (("UPDATE.md", update_text), ("UNINSTALL.md", uninstall_text)):
-        if LEGACY_NAMESPACE not in text or "legacyParentTarget" not in text:
+        if LEGACY_NAMESPACE not in text or "legacyParentTarget" not in text or "legacyInnerTarget" not in text:
             fail(f".codex/{name} must handle legacy namespace-style junctions")
 
 
