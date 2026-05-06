@@ -14,12 +14,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 
 - Git repo: `%USERPROFILE%\.codex\codex-fewer-permission-prompts`
 - Python package: editable user install of `codex-fewer-permission-prompts`
-- Skill namespace junction: `%USERPROFILE%\.agents\skills\codex-permission-tools -> %USERPROFILE%\.codex\codex-fewer-permission-prompts\skills`
+- Skill junction: `%USERPROFILE%\.agents\skills\codex-fewer-permission-prompts -> %USERPROFILE%\.codex\codex-fewer-permission-prompts\skills\codex-fewer-permission-prompts`
 
-The outer namespace is intentionally `codex-permission-tools`, while the bundled
-skill remains `codex-fewer-permission-prompts`. This avoids a duplicated Codex
-skill menu label such as `Codex Fewer Permission Prompts: Codex Fewer Permission
-Prompts`.
+The junction points directly to the bundled skill directory, not to the parent
+`skills` directory. This keeps the Codex skill menu as a single entry such as
+`Codex Fewer Permission Prompts`, without a `namespace: skill` prefix.
 
 This install does not edit Codex rules. The first real rules write happens only when the user later approves `apply --write`.
 
@@ -34,9 +33,9 @@ Run this PowerShell block exactly:
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
 $skillsRoot = Join-Path $HOME '.agents\skills'
-$skillNamespace = Join-Path $skillsRoot 'codex-permission-tools'
-$legacySkillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
-$skillTarget = Join-Path $repoRoot 'skills'
+$skillLink = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
+$legacyNamespace = Join-Path $skillsRoot 'codex-permission-tools'
+$skillTarget = Join-Path $repoRoot 'skills\codex-fewer-permission-prompts'
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'git is required before installing codex-fewer-permission-prompts.'
@@ -50,18 +49,18 @@ if (Test-Path $repoRoot) {
     throw 'codex-fewer-permission-prompts is already installed. Follow UPDATE.md instead.'
 }
 
-if (Test-Path $skillNamespace) {
+if (Test-Path $skillLink) {
     throw 'The skill junction already exists. Remove it or follow UNINSTALL.md before reinstalling.'
 }
 
-if (Test-Path $legacySkillNamespace) {
-    throw 'The legacy codex-fewer-permission-prompts skill namespace already exists. Follow UPDATE.md to migrate it or UNINSTALL.md before reinstalling.'
+if (Test-Path $legacyNamespace) {
+    throw 'The legacy codex-permission-tools skill namespace already exists. Follow UPDATE.md to migrate it or UNINSTALL.md before reinstalling.'
 }
 
 New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
 git clone https://github.com/gaoguobin/codex-fewer-permission-prompts.git $repoRoot
 python -m pip install --user -e $repoRoot
-cmd /d /c "mklink /J `"$skillNamespace`" `"$skillTarget`""
+cmd /d /c "mklink /J `"$skillLink`" `"$skillTarget`""
 ```
 
 ## After install

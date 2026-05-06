@@ -161,7 +161,7 @@ class PackagingTests(unittest.TestCase):
     def test_plugin_manifest_points_to_skills(self):
         root = Path(__file__).resolve().parents[1]
         manifest = json.loads((root / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(manifest["name"], "codex-fewer-permission-prompts")
+        self.assertEqual(manifest["name"], "codex-permission-tools")
         self.assertEqual(manifest["skills"], "./skills/")
 
     def test_plugin_skill_has_script_wrapper(self):

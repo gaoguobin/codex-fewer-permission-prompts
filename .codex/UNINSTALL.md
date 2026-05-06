@@ -22,19 +22,35 @@ Run this PowerShell block exactly:
 
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
-$skillNamespace = Join-Path $HOME '.agents\skills\codex-permission-tools'
-$legacySkillNamespace = Join-Path $HOME '.agents\skills\codex-fewer-permission-prompts'
+$skillLink = Join-Path $HOME '.agents\skills\codex-fewer-permission-prompts'
+$legacyNamespace = Join-Path $HOME '.agents\skills\codex-permission-tools'
+$legacyParentTarget = Join-Path $repoRoot 'skills'
+$skillTarget = Join-Path $repoRoot 'skills\codex-fewer-permission-prompts'
 $rulesFile = Join-Path $HOME '.codex\rules\default.rules'
 
-function Remove-SkillNamespace($path) {
+function Test-JunctionTarget($path, $target) {
+    if (-not (Test-Path $path)) {
+        return $false
+    }
+    $item = Get-Item -LiteralPath $path -Force
+    $currentTarget = @($item.Target)[0]
+    if ($item.LinkType -ne 'Junction' -or -not $currentTarget) {
+        return $false
+    }
+    return [System.IO.Path]::GetFullPath($currentTarget).TrimEnd('\') -ieq [System.IO.Path]::GetFullPath($target).TrimEnd('\')
+}
+
+function Remove-ExpectedJunction($path, $targets) {
     if (-not (Test-Path $path)) {
         return
     }
-    $item = Get-Item -LiteralPath $path -Force
-    if ($item.LinkType -ne 'Junction') {
-        throw "Refusing to remove non-junction skill namespace: $path"
+    foreach ($target in $targets) {
+        if (Test-JunctionTarget $path $target) {
+            cmd /d /c "rmdir `"$path`""
+            return
+        }
     }
-    cmd /d /c "rmdir `"$path`""
+    throw "Refusing to remove unexpected skill junction: $path"
 }
 
 if (Test-Path $repoRoot) {
@@ -46,8 +62,8 @@ if (Test-Path $repoRoot) {
 
 python -m pip uninstall -y codex-fewer-permission-prompts
 
-Remove-SkillNamespace $skillNamespace
-Remove-SkillNamespace $legacySkillNamespace
+Remove-ExpectedJunction $skillLink @($legacyParentTarget, $skillTarget)
+Remove-ExpectedJunction $legacyNamespace @($legacyParentTarget, $skillTarget)
 
 if (Test-Path $repoRoot) {
     Remove-Item -LiteralPath $repoRoot -Recurse -Force

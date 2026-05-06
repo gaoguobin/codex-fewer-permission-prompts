@@ -1,5 +1,5 @@
 {
-  "name": "codex-fewer-permission-prompts",
+  "name": "codex-permission-tools",
   "version": "0.1.0",
   "description": "Safely propose, verify, apply, and rollback Codex prefix_rule entries for repeated low-risk permission prompts.",
   "author": {

@@ -19,9 +19,35 @@ Run this PowerShell block exactly:
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
 $skillsRoot = Join-Path $HOME '.agents\skills'
-$skillNamespace = Join-Path $skillsRoot 'codex-permission-tools'
-$legacySkillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
-$skillTarget = Join-Path $repoRoot 'skills'
+$skillLink = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
+$legacyNamespace = Join-Path $skillsRoot 'codex-permission-tools'
+$legacyParentTarget = Join-Path $repoRoot 'skills'
+$skillTarget = Join-Path $repoRoot 'skills\codex-fewer-permission-prompts'
+
+function Test-JunctionTarget($path, $target) {
+    if (-not (Test-Path $path)) {
+        return $false
+    }
+    $item = Get-Item -LiteralPath $path -Force
+    $currentTarget = @($item.Target)[0]
+    if ($item.LinkType -ne 'Junction' -or -not $currentTarget) {
+        return $false
+    }
+    return [System.IO.Path]::GetFullPath($currentTarget).TrimEnd('\') -ieq [System.IO.Path]::GetFullPath($target).TrimEnd('\')
+}
+
+function Remove-ExpectedJunction($path, $targets) {
+    if (-not (Test-Path $path)) {
+        return
+    }
+    foreach ($target in $targets) {
+        if (Test-JunctionTarget $path $target) {
+            cmd /d /c "rmdir `"$path`""
+            return
+        }
+    }
+    throw "Skill path exists but does not point to this install: $path"
+}
 
 if (-not (Test-Path $repoRoot)) {
     throw 'codex-fewer-permission-prompts is not installed. Follow INSTALL.md first.'
@@ -32,24 +58,18 @@ python -m pip install --user -e $repoRoot
 
 New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
 
-if (Test-Path $legacySkillNamespace) {
-    $legacyItem = Get-Item -LiteralPath $legacySkillNamespace -Force
-    $legacyTarget = @($legacyItem.Target)[0]
-    $legacyTargetMatches = $false
-    if ($legacyItem.LinkType -eq 'Junction' -and $legacyTarget) {
-        $legacyTargetMatches = [System.IO.Path]::GetFullPath($legacyTarget).TrimEnd('\') -ieq [System.IO.Path]::GetFullPath($skillTarget).TrimEnd('\')
+Remove-ExpectedJunction $legacyNamespace @($legacyParentTarget, $skillTarget)
+
+if (Test-Path $skillLink) {
+    if (Test-JunctionTarget $skillLink $legacyParentTarget) {
+        cmd /d /c "rmdir `"$skillLink`""
+    } elseif (-not (Test-JunctionTarget $skillLink $skillTarget)) {
+        throw "Skill path exists but does not point to this install: $skillLink"
     }
-    if (-not $legacyTargetMatches) {
-        throw "Legacy skill namespace exists but does not point to this install: $legacySkillNamespace"
-    }
-    if (-not (Test-Path $skillNamespace)) {
-        cmd /d /c "mklink /J `"$skillNamespace`" `"$skillTarget`""
-    }
-    cmd /d /c "rmdir `"$legacySkillNamespace`""
 }
 
-if (-not (Test-Path $skillNamespace)) {
-    cmd /d /c "mklink /J `"$skillNamespace`" `"$skillTarget`""
+if (-not (Test-Path $skillLink)) {
+    cmd /d /c "mklink /J `"$skillLink`" `"$skillTarget`""
 }
 
 python -m codex_fewer_permission_prompts doctor --json

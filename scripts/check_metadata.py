@@ -16,8 +16,10 @@ except ModuleNotFoundError:  # pragma: no cover - exercised on Python < 3.11 in 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = "codex-fewer-permission-prompts"
-SKILL_NAMESPACE = "codex-permission-tools"
+PLUGIN_NAME = "codex-permission-tools"
+LEGACY_NAMESPACE = "codex-permission-tools"
 SKILL_PATH = Path("skills") / SKILL_NAME / "SKILL.md"
+DIRECT_SKILL_LINK = f".agents/skills/{SKILL_NAME}"
 
 
 def fail(message: str) -> None:
@@ -60,7 +62,9 @@ def check_readme() -> None:
         "Plugin Readiness",
         "Safety Model",
         "SkillsMP",
-        f"`{SKILL_NAMESPACE}`",
+        f"`{PLUGIN_NAME}`",
+        f"`~/{DIRECT_SKILL_LINK}`",
+        "without a namespace prefix",
         "open a new conversation",
         "旧 thread",
         "not an official OpenAI plugin",
@@ -102,8 +106,8 @@ def check_skills() -> None:
 def check_plugin_manifest() -> None:
     path = ROOT / ".codex-plugin" / "plugin.json"
     manifest = json.loads(path.read_text(encoding="utf-8"))
-    if manifest.get("name") != SKILL_NAME:
-        fail("plugin manifest name does not match skill name")
+    if manifest.get("name") != PLUGIN_NAME:
+        fail("plugin manifest name must be the stable plugin namespace")
     if manifest.get("skills") != "./skills/":
         fail("plugin manifest skills path must be ./skills/")
     keywords = set(manifest.get("keywords", []))
@@ -125,8 +129,8 @@ def check_codex_docs() -> None:
     }
     for name, path in docs.items():
         text = path.read_text(encoding="utf-8")
-        if SKILL_NAMESPACE not in text:
-            fail(f".codex/{name} does not mention the non-duplicating skill namespace")
+        if ".agents\\skills" not in text or SKILL_NAME not in text:
+            fail(f".codex/{name} does not mention the direct skill junction")
     for name in ("INSTALL.md", "UPDATE.md"):
         text = docs[name].read_text(encoding="utf-8")
         if "旧 thread" not in text or "新开一个对话" not in text:
@@ -134,8 +138,8 @@ def check_codex_docs() -> None:
     update_text = docs["UPDATE.md"].read_text(encoding="utf-8")
     uninstall_text = docs["UNINSTALL.md"].read_text(encoding="utf-8")
     for name, text in (("UPDATE.md", update_text), ("UNINSTALL.md", uninstall_text)):
-        if "legacySkillNamespace" not in text:
-            fail(f".codex/{name} must handle the legacy duplicated skill namespace")
+        if LEGACY_NAMESPACE not in text or "legacyParentTarget" not in text:
+            fail(f".codex/{name} must handle legacy namespace-style junctions")
 
 
 def check_pyproject() -> None:

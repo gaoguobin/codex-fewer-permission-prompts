@@ -82,9 +82,11 @@ includes:
 - `skills/codex-fewer-permission-prompts/scripts/codex_fewer_permission_prompts.py`
 
 The plugin manifest points to `./skills/`, following the current Codex plugin
-layout for bundled skills. This metadata is preparatory packaging and discovery
-metadata only. It does not install hooks, change Codex config, change
-permissions, edit rules, or imply an official marketplace listing.
+layout for bundled skills. Its plugin package name is `codex-permission-tools`
+so it does not duplicate the bundled skill name. This metadata is preparatory
+packaging and discovery metadata only. It does not install hooks, change Codex
+config, change permissions, edit rules, or imply an official marketplace
+listing.
 
 Current supported installation remains the Codex-managed install flow below.
 
@@ -98,12 +100,12 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 
 The install flow clones this repository to
 `~/.codex/codex-fewer-permission-prompts`, installs the Python package in
-editable user mode, and links the bundled skill namespace into
-`~/.agents/skills/codex-permission-tools`.
+editable user mode, and links the bundled skill directory directly into
+`~/.agents/skills/codex-fewer-permission-prompts`.
 
-The outer namespace is `codex-permission-tools` and the bundled Agent Skill is
-`codex-fewer-permission-prompts`, so Codex skill menus can display a non-duplicated
-label such as `Codex Permission Tools: Codex Fewer Permission Prompts`.
+The junction points to `skills/codex-fewer-permission-prompts`, not to the
+parent `skills` directory, so Codex skill menus can show the single command
+label `Codex Fewer Permission Prompts` without a namespace prefix.
 
 After installation, fully restart Codex App and open a new conversation, or
 open a new Codex CLI process so skill discovery refreshes. Existing threads may
@@ -200,9 +202,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 The update flow pulls the installed repository, reinstalls the editable Python
-package, migrates the legacy `~/.agents/skills/codex-fewer-permission-prompts`
-junction to `~/.agents/skills/codex-permission-tools` when needed, and runs
-`doctor`.
+package, migrates legacy namespace-style junctions to the direct skill junction
+when needed, and runs `doctor`.
 
 After update, fully restart Codex App and open a new conversation, or open a new
 Codex CLI process. Do not use the old update thread to judge whether `/` menu
@@ -292,11 +293,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 安装流程会把仓库克隆到 `~/.codex/codex-fewer-permission-prompts`，以 editable user 模式安装 Python
-包，并把外层 skill namespace 链接到 `~/.agents/skills/codex-permission-tools`。
+包，并把内层 skill 目录直接链接到 `~/.agents/skills/codex-fewer-permission-prompts`。
 
-外层 namespace 是 `codex-permission-tools`，内层 Agent Skill 仍是
-`codex-fewer-permission-prompts`，这样 Codex 的 skill 菜单可以显示成
-`Codex Permission Tools: Codex Fewer Permission Prompts`，避免重复标题。
+这个 junction 指向 `skills/codex-fewer-permission-prompts`，不是父级 `skills` 目录；
+这样 Codex 的 skill 菜单可以只显示 `Codex Fewer Permission Prompts`，不带 namespace 前缀。
 
 安装后需要完全重启 Codex App 并新开一个对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
 旧 thread 可能缓存安装前的 skill 菜单，不适合用来判断 `/` 菜单是否刷新。
