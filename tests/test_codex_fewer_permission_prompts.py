@@ -1,4 +1,5 @@
 import json
+import sys
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -6,8 +7,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import scripts.codex_fewer_permission_prompts as fewer_prompts
-from scripts.codex_fewer_permission_prompts import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+import codex_fewer_permission_prompts.cli as fewer_prompts
+from codex_fewer_permission_prompts.cli import (
     BEGIN,
     END,
     SourceFile,
@@ -21,6 +24,7 @@ from scripts.codex_fewer_permission_prompts import (
     RuleCandidate,
     backup_file,
     cmd_apply,
+    normalize_argv,
 )
 
 
@@ -140,6 +144,30 @@ class RuleBlockTests(unittest.TestCase):
                     path.rmdir()
             if root.exists():
                 root.rmdir()
+
+    def test_slash_alias_defaults_to_dry_run_propose(self):
+        self.assertEqual(normalize_argv(["/fewer-permission-prompts"]), ["propose", "--dry-run"])
+        self.assertEqual(normalize_argv(["/fpp", "doctor"]), ["doctor"])
+
+
+class PackagingTests(unittest.TestCase):
+    def test_plugin_skill_matches_root_skill(self):
+        root = Path(__file__).resolve().parents[1]
+        self.assertEqual(
+            (root / "SKILL.md").read_text(encoding="utf-8"),
+            (root / "skills" / "codex-fewer-permission-prompts" / "SKILL.md").read_text(encoding="utf-8"),
+        )
+
+    def test_plugin_manifest_points_to_skills(self):
+        root = Path(__file__).resolve().parents[1]
+        manifest = json.loads((root / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["name"], "codex-fewer-permission-prompts")
+        self.assertEqual(manifest["skills"], "./skills/")
+
+    def test_plugin_skill_has_script_wrapper(self):
+        root = Path(__file__).resolve().parents[1]
+        wrapper = root / "skills" / "codex-fewer-permission-prompts" / "scripts" / "codex_fewer_permission_prompts.py"
+        self.assertTrue(wrapper.exists())
 
 
 if __name__ == "__main__":

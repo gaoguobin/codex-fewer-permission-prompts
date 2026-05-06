@@ -1,0 +1,40 @@
+{
+  "name": "codex-fewer-permission-prompts",
+  "version": "0.1.0",
+  "description": "Safely propose, verify, apply, and rollback Codex prefix_rule entries for repeated low-risk permission prompts.",
+  "author": {
+    "name": "gaoguobin",
+    "url": "https://github.com/gaoguobin"
+  },
+  "homepage": "https://github.com/gaoguobin/codex-fewer-permission-prompts",
+  "repository": "https://github.com/gaoguobin/codex-fewer-permission-prompts",
+  "keywords": [
+    "agent-skills",
+    "codex",
+    "openai-codex",
+    "codex-skill",
+    "permissions",
+    "rules",
+    "execpolicy"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Fewer Permission Prompts",
+    "shortDescription": "Suggest and manage safe Codex rules for repeated low-risk prompts.",
+    "longDescription": "Scan local Codex history for frequent low-risk commands, propose official prefix_rule entries, verify them with codex execpolicy check, apply with backups and sentinel blocks, and roll back safely.",
+    "developerName": "gaoguobin",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Local workflow",
+      "Rules analysis",
+      "Rollback"
+    ],
+    "websiteURL": "https://github.com/gaoguobin/codex-fewer-permission-prompts",
+    "defaultPrompt": [
+      "/fewer-permission-prompts doctor",
+      "/fewer-permission-prompts propose",
+      "Generate safe Codex rules to reduce repeated permission prompts."
+    ],
+    "brandColor": "#10A37F"
+  }
+}

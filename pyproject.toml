@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-fewer-permission-prompts"
+version = "0.1.0"
+description = "Safely propose, verify, apply, and rollback Codex prefix_rule entries for repeated low-risk commands."
+readme = "SKILL.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "gaoguobin" }
+]
+keywords = [
+  "codex",
+  "agent-skills",
+  "permissions",
+  "rules",
+  "execpolicy"
+]
+
+[project.scripts]
+codex-fewer-permission-prompts = "codex_fewer_permission_prompts.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

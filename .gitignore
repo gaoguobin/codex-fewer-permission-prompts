@@ -1,3 +1,8 @@
 __pycache__/
 *.py[cod]
 codex-fewer-permission-prompts-test.rules*
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+tmp*/
