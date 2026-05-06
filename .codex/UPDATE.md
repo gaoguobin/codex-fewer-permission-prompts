@@ -19,7 +19,8 @@ Run this PowerShell block exactly:
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
 $skillsRoot = Join-Path $HOME '.agents\skills'
-$skillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
+$skillNamespace = Join-Path $skillsRoot 'codex-permission-tools'
+$legacySkillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
 $skillTarget = Join-Path $repoRoot 'skills'
 
 if (-not (Test-Path $repoRoot)) {
@@ -29,8 +30,25 @@ if (-not (Test-Path $repoRoot)) {
 git -C $repoRoot pull --ff-only
 python -m pip install --user -e $repoRoot
 
+New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
+
+if (Test-Path $legacySkillNamespace) {
+    $legacyItem = Get-Item -LiteralPath $legacySkillNamespace -Force
+    $legacyTarget = @($legacyItem.Target)[0]
+    $legacyTargetMatches = $false
+    if ($legacyItem.LinkType -eq 'Junction' -and $legacyTarget) {
+        $legacyTargetMatches = [System.IO.Path]::GetFullPath($legacyTarget).TrimEnd('\') -ieq [System.IO.Path]::GetFullPath($skillTarget).TrimEnd('\')
+    }
+    if (-not $legacyTargetMatches) {
+        throw "Legacy skill namespace exists but does not point to this install: $legacySkillNamespace"
+    }
+    if (-not (Test-Path $skillNamespace)) {
+        cmd /d /c "mklink /J `"$skillNamespace`" `"$skillTarget`""
+    }
+    cmd /d /c "rmdir `"$legacySkillNamespace`""
+}
+
 if (-not (Test-Path $skillNamespace)) {
-    New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
     cmd /d /c "mklink /J `"$skillNamespace`" `"$skillTarget`""
 }
 

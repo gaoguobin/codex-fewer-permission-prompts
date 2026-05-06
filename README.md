@@ -99,7 +99,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 The install flow clones this repository to
 `~/.codex/codex-fewer-permission-prompts`, installs the Python package in
 editable user mode, and links the bundled skill namespace into
-`~/.agents/skills`.
+`~/.agents/skills/codex-permission-tools`.
+
+The outer namespace is `codex-permission-tools` and the bundled Agent Skill is
+`codex-fewer-permission-prompts`, so Codex skill menus can display a non-duplicated
+label such as `Codex Permission Tools: Codex Fewer Permission Prompts`.
 
 After installation, restart Codex App and return to the same conversation, or
 open a new Codex CLI process so skill discovery refreshes.
@@ -195,7 +199,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 The update flow pulls the installed repository, reinstalls the editable Python
-package, refreshes the skill junction if needed, and runs `doctor`.
+package, migrates the legacy `~/.agents/skills/codex-fewer-permission-prompts`
+junction to `~/.agents/skills/codex-permission-tools` when needed, and runs
+`doctor`.
 
 ## Uninstall
 
@@ -206,8 +212,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 The uninstall flow removes this tool's sentinel block from the default rules
-file, uninstalls the Python package, removes the skill junction, and deletes the
-installed repository. It preserves unrelated rules and unrelated skills.
+file, uninstalls the Python package, removes the current or legacy skill
+junction, and deletes the installed repository. It preserves unrelated rules and
+unrelated skills.
 
 ## Safety Model
 
@@ -280,7 +287,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 ```
 
 安装流程会把仓库克隆到 `~/.codex/codex-fewer-permission-prompts`，以 editable user 模式安装 Python
-包，并把 skill namespace 链接到 `~/.agents/skills`。
+包，并把外层 skill namespace 链接到 `~/.agents/skills/codex-permission-tools`。
+
+外层 namespace 是 `codex-permission-tools`，内层 Agent Skill 仍是
+`codex-fewer-permission-prompts`，这样 Codex 的 skill 菜单可以显示成
+`Codex Permission Tools: Codex Fewer Permission Prompts`，避免重复标题。
 
 安装后需要重启 Codex App 并回到原对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
 

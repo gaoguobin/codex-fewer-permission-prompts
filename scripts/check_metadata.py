@@ -16,6 +16,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised on Python < 3.11 in 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAME = "codex-fewer-permission-prompts"
+SKILL_NAMESPACE = "codex-permission-tools"
 SKILL_PATH = Path("skills") / SKILL_NAME / "SKILL.md"
 
 
@@ -59,6 +60,7 @@ def check_readme() -> None:
         "Plugin Readiness",
         "Safety Model",
         "SkillsMP",
+        f"`{SKILL_NAMESPACE}`",
         "not an official OpenAI plugin",
     ]
     for snippet in required:
@@ -113,6 +115,23 @@ def check_plugin_manifest() -> None:
         fail("plugin displayName duplicates the skill title in Codex skill menus")
 
 
+def check_codex_docs() -> None:
+    docs = {
+        "INSTALL.md": ROOT / ".codex" / "INSTALL.md",
+        "UPDATE.md": ROOT / ".codex" / "UPDATE.md",
+        "UNINSTALL.md": ROOT / ".codex" / "UNINSTALL.md",
+    }
+    for name, path in docs.items():
+        text = path.read_text(encoding="utf-8")
+        if SKILL_NAMESPACE not in text:
+            fail(f".codex/{name} does not mention the non-duplicating skill namespace")
+    update_text = docs["UPDATE.md"].read_text(encoding="utf-8")
+    uninstall_text = docs["UNINSTALL.md"].read_text(encoding="utf-8")
+    for name, text in (("UPDATE.md", update_text), ("UNINSTALL.md", uninstall_text)):
+        if "legacySkillNamespace" not in text:
+            fail(f".codex/{name} must handle the legacy duplicated skill namespace")
+
+
 def check_pyproject() -> None:
     path = ROOT / "pyproject.toml"
     data = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -133,6 +152,7 @@ def main() -> int:
     check_readme()
     check_skills()
     check_plugin_manifest()
+    check_codex_docs()
     check_pyproject()
     print("metadata-ok")
     return 0

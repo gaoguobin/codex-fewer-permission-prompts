@@ -14,7 +14,12 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 
 - Git repo: `%USERPROFILE%\.codex\codex-fewer-permission-prompts`
 - Python package: editable user install of `codex-fewer-permission-prompts`
-- Skill namespace junction: `%USERPROFILE%\.agents\skills\codex-fewer-permission-prompts -> %USERPROFILE%\.codex\codex-fewer-permission-prompts\skills`
+- Skill namespace junction: `%USERPROFILE%\.agents\skills\codex-permission-tools -> %USERPROFILE%\.codex\codex-fewer-permission-prompts\skills`
+
+The outer namespace is intentionally `codex-permission-tools`, while the bundled
+skill remains `codex-fewer-permission-prompts`. This avoids a duplicated Codex
+skill menu label such as `Codex Fewer Permission Prompts: Codex Fewer Permission
+Prompts`.
 
 This install does not edit Codex rules. The first real rules write happens only when the user later approves `apply --write`.
 
@@ -29,7 +34,8 @@ Run this PowerShell block exactly:
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
 $skillsRoot = Join-Path $HOME '.agents\skills'
-$skillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
+$skillNamespace = Join-Path $skillsRoot 'codex-permission-tools'
+$legacySkillNamespace = Join-Path $skillsRoot 'codex-fewer-permission-prompts'
 $skillTarget = Join-Path $repoRoot 'skills'
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
@@ -46,6 +52,10 @@ if (Test-Path $repoRoot) {
 
 if (Test-Path $skillNamespace) {
     throw 'The skill junction already exists. Remove it or follow UNINSTALL.md before reinstalling.'
+}
+
+if (Test-Path $legacySkillNamespace) {
+    throw 'The legacy codex-fewer-permission-prompts skill namespace already exists. Follow UPDATE.md to migrate it or UNINSTALL.md before reinstalling.'
 }
 
 New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null

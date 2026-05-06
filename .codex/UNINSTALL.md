@@ -22,8 +22,20 @@ Run this PowerShell block exactly:
 
 ```powershell
 $repoRoot = Join-Path $HOME '.codex\codex-fewer-permission-prompts'
-$skillNamespace = Join-Path $HOME '.agents\skills\codex-fewer-permission-prompts'
+$skillNamespace = Join-Path $HOME '.agents\skills\codex-permission-tools'
+$legacySkillNamespace = Join-Path $HOME '.agents\skills\codex-fewer-permission-prompts'
 $rulesFile = Join-Path $HOME '.codex\rules\default.rules'
+
+function Remove-SkillNamespace($path) {
+    if (-not (Test-Path $path)) {
+        return
+    }
+    $item = Get-Item -LiteralPath $path -Force
+    if ($item.LinkType -ne 'Junction') {
+        throw "Refusing to remove non-junction skill namespace: $path"
+    }
+    cmd /d /c "rmdir `"$path`""
+}
 
 if (Test-Path $repoRoot) {
     $env:PYTHONPATH = Join-Path $repoRoot 'src'
@@ -34,9 +46,8 @@ if (Test-Path $repoRoot) {
 
 python -m pip uninstall -y codex-fewer-permission-prompts
 
-if (Test-Path $skillNamespace) {
-    cmd /d /c "rmdir `"$skillNamespace`""
-}
+Remove-SkillNamespace $skillNamespace
+Remove-SkillNamespace $legacySkillNamespace
 
 if (Test-Path $repoRoot) {
     Remove-Item -LiteralPath $repoRoot -Recurse -Force
