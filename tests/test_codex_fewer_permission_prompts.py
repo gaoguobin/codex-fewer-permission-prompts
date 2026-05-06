@@ -148,6 +148,8 @@ class RuleBlockTests(unittest.TestCase):
 
     def test_slash_alias_defaults_to_dry_run_propose(self):
         self.assertEqual(normalize_argv(["/fewer-permission-prompts"]), ["default"])
+        self.assertEqual(normalize_argv(["/fewer-permission-prompts", "--max-candidates", "5"]), ["default", "--max-candidates", "5"])
+        self.assertEqual(normalize_argv(["/fewer-permission-prompts", "--dry-run"]), ["default", "--dry-run"])
         self.assertEqual(normalize_argv([]), ["default"])
         self.assertEqual(normalize_argv(["/fpp", "doctor"]), ["doctor"])
 

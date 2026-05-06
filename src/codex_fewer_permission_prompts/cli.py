@@ -849,6 +849,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     default = sub.add_parser("default", help="Run the default dry-run workflow: doctor, then propose.")
     add_proposal_args(default)
+    default.add_argument("--dry-run", action="store_true", help="Accepted for workflow clarity; default never writes files.")
     default.set_defaults(func=cmd_default)
 
     doctor = sub.add_parser("doctor", help="Inspect Codex paths and JSONL shapes without content.")
@@ -910,7 +911,8 @@ def normalize_argv(argv: Sequence[str] | None) -> list[str] | None:
     else:
         raw = list(argv)
     if raw and raw[0].lower() in SLASH_ALIASES:
-        raw = raw[1:] or ["default"]
+        tail = raw[1:]
+        raw = tail if tail and not tail[0].startswith("-") else ["default", *tail]
     if not raw:
         raw = ["default"]
     return raw
