@@ -43,6 +43,10 @@ def anchor_for(heading: str) -> str:
     return re.sub(r"-+", "-", anchor)
 
 
+def title_from_kebab(value: str) -> str:
+    return " ".join(part.capitalize() for part in value.split("-") if part)
+
+
 def check_readme() -> None:
     path = ROOT / "README.md"
     if not path.exists():
@@ -105,6 +109,8 @@ def check_plugin_manifest() -> None:
     interface = manifest.get("interface", {})
     if not interface.get("displayName") or not interface.get("shortDescription"):
         fail("plugin manifest interface metadata is incomplete")
+    if interface.get("displayName") == title_from_kebab(SKILL_NAME):
+        fail("plugin displayName duplicates the skill title in Codex skill menus")
 
 
 def check_pyproject() -> None:

@@ -25,7 +25,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Codex Fewer Permission Prompts",
+    "displayName": "Codex Permission Tools",
     "shortDescription": "Suggest and manage safe Codex rules for repeated low-risk prompts.",
     "longDescription": "Scan local Codex history for frequent low-risk commands, propose official prefix_rule entries, verify them with codex execpolicy check, apply with backups and sentinel blocks, and roll back safely.",
     "developerName": "gaoguobin",
