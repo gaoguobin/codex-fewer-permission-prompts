@@ -114,9 +114,11 @@ The user-facing skill path points outside that plugin repo so Codex skill menus
 can show the single command label `Codex Fewer Permission Prompts` without the
 plugin namespace prefix.
 
-After installation, fully restart Codex App and open a new conversation, or
-open a new Codex CLI process so skill discovery refreshes. Existing threads may
-keep a cached skill menu and can still show old labels.
+After installation, fully restart Codex App, or open a new Codex CLI process so
+skill discovery refreshes. Once the app has restarted, use
+`/fewer-permission-prompts` directly; opening a separate new chat is not
+required. Do not judge `/` menu labels from the old app process that was running
+during install.
 
 ## Doctor
 
@@ -228,9 +230,9 @@ package, refreshes the standalone skill mirror, migrates legacy namespace-style
 or repo-internal skill junctions to the standalone skill junction when needed,
 and runs `doctor`.
 
-After update, fully restart Codex App and open a new conversation, or open a new
-Codex CLI process. Do not use the old update thread to judge whether `/` menu
-labels have refreshed.
+After update, fully restart Codex App, or open a new Codex CLI process. Once the
+app has restarted, use `/fewer-permission-prompts` directly. Do not use the
+pre-restart app process to judge whether `/` menu labels have refreshed.
 
 ## Uninstall
 
@@ -328,8 +330,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 源码仓库仍然保留 `.codex-plugin` 作为 plugin-ready 元数据；用户实际加载的 skill 目录在 plugin
 仓库外面。这样 Codex 的 skill 菜单可以只显示 `Codex Fewer Permission Prompts`，不带 plugin namespace 前缀。
 
-安装后需要完全重启 Codex App 并新开一个对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
-旧 thread 可能缓存安装前的 skill 菜单，不适合用来判断 `/` 菜单是否刷新。
+安装后需要完全重启 Codex App，或新开 CLI 实例，让 Codex 重新扫描 skills。
+重启后直接说 `/fewer-permission-prompts` 即可；不需要额外新开一个对话。不要用安装后尚未重启的旧
+App 进程判断 `/` 菜单是否刷新，因为旧进程可能缓存安装前的 skill 菜单。
 
 ### Doctor
 

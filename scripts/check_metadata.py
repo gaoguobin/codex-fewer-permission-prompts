@@ -70,8 +70,8 @@ def check_readme() -> None:
         "default dry-run workflow",
         "editable metadata",
         "plugin namespace prefix",
-        "open a new conversation",
-        "旧 thread",
+        "opening a separate new chat is not",
+        "旧进程",
         "not an official OpenAI plugin",
     ]
     for snippet in required:
@@ -140,8 +140,10 @@ def check_codex_docs() -> None:
             fail(f".codex/{name} does not mention the standalone skill mirror")
     for name in ("INSTALL.md", "UPDATE.md"):
         text = docs[name].read_text(encoding="utf-8")
-        if "旧 thread" not in text or "新开一个对话" not in text:
-            fail(f".codex/{name} must warn that existing threads may cache skill menus")
+        if "旧进程" not in text or "/fewer-permission-prompts" not in text or "默认 dry-run" not in text:
+            fail(f".codex/{name} must point users to the default dry-run entry after restart")
+        if "新开一个对话" in text or "fresh thread" in text:
+            fail(f".codex/{name} must not require a new chat after app restart")
         if "skillMirror" not in text:
             fail(f".codex/{name} must create or refresh the standalone skill mirror")
     update_text = docs["UPDATE.md"].read_text(encoding="utf-8")

@@ -89,10 +89,10 @@ python -m codex_fewer_permission_prompts doctor --json
 Report the JSON result in the reply. When the command succeeds, explicitly tell the user:
 
 ```text
-请完全重启 Codex App 后新开一个对话，或新开 CLI 实例，让它重新扫描 ~/.agents/skills；然后再说“/fewer-permission-prompts doctor”或“生成 Codex 低风险规则建议”。不要用安装时的旧对话判断 / 菜单是否已刷新，因为旧 thread 可能缓存安装前的 skill 列表。
+请完全重启 Codex App，或新开 CLI 实例，让它重新扫描 ~/.agents/skills；重启后直接说“/fewer-permission-prompts”即可开始默认 dry-run 流程。不要用安装后尚未重启的旧 App 进程判断 / 菜单是否已刷新，因为旧进程可能缓存安装前的 skill 列表。
 ```
 
-Do not claim the skill is available before the restart and a fresh thread or
+Do not claim the skill is available before restarting Codex App or opening a
 fresh CLI process.
 
 After restarting Codex App or opening a new CLI process, the user can ask:
