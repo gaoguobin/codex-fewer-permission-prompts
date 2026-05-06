@@ -61,6 +61,7 @@ Generate safe Codex rules to reduce repeated permission prompts.
 Or with slash-style text that the skill maps to its workflow:
 
 ```text
+/fewer-permission-prompts
 /fewer-permission-prompts doctor
 /fewer-permission-prompts propose
 /fewer-permission-prompts apply
@@ -70,6 +71,10 @@ Or with slash-style text that the skill maps to its workflow:
 Codex currently documents built-in slash commands only. The slash-style text
 above is handled by this skill and CLI; it does not register a native Codex
 slash command.
+
+Bare `/fewer-permission-prompts` is the default dry-run workflow: Codex should
+run `doctor --json`, then `propose --dry-run`, summarize the proposed low-risk
+rules, and stop without modifying files.
 
 ## Plugin Readiness
 
@@ -118,11 +123,13 @@ keep a cached skill menu and can still show old labels.
 Inspect the current Codex paths and available scan inputs:
 
 ```powershell
+python -m codex_fewer_permission_prompts
 python -m codex_fewer_permission_prompts doctor --json
 ```
 
 `doctor` reports `CODEX_HOME`, the default rules file, whether the sentinel
 block is present, and JSONL shape counts. It does not print transcript content.
+With no CLI subcommand, the tool runs `doctor` followed by `propose --dry-run`.
 
 ## Dry-run and Propose
 
@@ -140,6 +147,19 @@ python -m codex_fewer_permission_prompts propose --dry-run --json
 
 The generated rules include `match` and `not_match` examples so Codex can check
 the intended behavior before loading or applying the rules.
+
+To verify a dry-run proposal before applying it, write the proposal JSON and
+verify it without `--rules-file`; the CLI will create a temporary rules file for
+the check:
+
+```powershell
+python -m codex_fewer_permission_prompts propose --dry-run --json > proposal.json
+python -m codex_fewer_permission_prompts verify --proposal-json proposal.json
+```
+
+Do not verify a dry-run proposal against the current `default.rules` unless the
+rules have already been applied; positive examples are expected not to match
+before then.
 
 ## Apply
 
@@ -223,7 +243,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 The uninstall flow removes this tool's sentinel block from the default rules
 file, uninstalls the Python package, removes the current or legacy skill
 junction, deletes the standalone skill mirror, and deletes the installed
-repository. It preserves unrelated rules and unrelated skills.
+repository. It verifies the Python package uninstall and retries when editable
+metadata remains. It preserves unrelated rules and unrelated skills.
 
 ## Safety Model
 
@@ -269,6 +290,7 @@ SkillsMP 或其它 marketplace 收录，也不声称是 OpenAI 官方 plugin 或
 也可以用类 slash 文本触发：
 
 ```text
+/fewer-permission-prompts
 /fewer-permission-prompts doctor
 /fewer-permission-prompts propose
 /fewer-permission-prompts apply
@@ -277,6 +299,9 @@ SkillsMP 或其它 marketplace 收录，也不声称是 OpenAI 官方 plugin 或
 
 这里的 `/fewer-permission-prompts ...` 是这个 skill 和 CLI 识别的文本入口，不是 Codex 原生注册的
 slash command。
+
+裸 `/fewer-permission-prompts` 是默认 dry-run 流程：先跑 `doctor --json`，再跑 `propose --dry-run`，
+总结候选低风险规则，然后停止，不修改文件。
 
 ### Plugin readiness
 
@@ -311,11 +336,13 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 查看当前 Codex 路径、rules 文件和可扫描输入：
 
 ```powershell
+python -m codex_fewer_permission_prompts
 python -m codex_fewer_permission_prompts doctor --json
 ```
 
 `doctor` 只输出 `CODEX_HOME`、默认 rules 文件、sentinel block 是否存在、JSONL shape 统计等信息，
 不会打印完整历史对话内容。
+CLI 不带子命令时，会先跑 `doctor`，再跑 `propose --dry-run`。
 
 ### Dry-run / propose
 
@@ -326,6 +353,16 @@ python -m codex_fewer_permission_prompts propose --dry-run
 ```
 
 生成的规则会带 `match` 和 `not_match` 示例，方便后续用 Codex 自己的 execpolicy evaluator 验证。
+
+如果要在应用前验证 dry-run 结果，先输出 proposal JSON，再不带 `--rules-file` 验证；CLI 会临时生成
+候选 rules 文件：
+
+```powershell
+python -m codex_fewer_permission_prompts propose --dry-run --json > proposal.json
+python -m codex_fewer_permission_prompts verify --proposal-json proposal.json
+```
+
+不要把未应用的 dry-run proposal 拿当前 `default.rules` 验正例；规则还没写入时，正例不命中是正常的。
 
 ### Apply
 
@@ -370,6 +407,18 @@ python -m codex_fewer_permission_prompts rollback --rules-file $HOME\.codex\rule
 ```
 
 回滚后也需要重启 Codex App 或新开 CLI session，让 rules 重新加载。
+
+### 卸载
+
+把这句话贴给 Codex：
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/codex-fewer-permission-prompts/main/.codex/UNINSTALL.md
+```
+
+卸载流程会移除本工具的 sentinel block、Python 包、standalone skill mirror、skill junction 和安装仓库。
+它会用 `pip show` 校验 Python 包是否仍存在，并在 editable metadata 残留时自动重试卸载；它不会删除无关
+rules 或无关 skills。
 
 ### 行为边界
 

@@ -67,6 +67,8 @@ def check_readme() -> None:
         f"`~/{DIRECT_SKILL_LINK}`",
         f"`~/{STANDALONE_SKILL_MIRROR}`",
         "standalone skill mirror",
+        "default dry-run workflow",
+        "editable metadata",
         "plugin namespace prefix",
         "open a new conversation",
         "旧 thread",
@@ -147,6 +149,8 @@ def check_codex_docs() -> None:
     for name, text in (("UPDATE.md", update_text), ("UNINSTALL.md", uninstall_text)):
         if LEGACY_NAMESPACE not in text or "legacyParentTarget" not in text or "legacyInnerTarget" not in text:
             fail(f".codex/{name} must handle legacy namespace-style junctions")
+    if "Uninstall-PythonPackage" not in uninstall_text or "pip show" not in uninstall_text:
+        fail(".codex/UNINSTALL.md must verify and retry Python package uninstall")
 
 
 def check_pyproject() -> None:

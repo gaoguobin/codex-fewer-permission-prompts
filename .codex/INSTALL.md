@@ -97,6 +97,7 @@ fresh CLI process.
 
 After restarting Codex App or opening a new CLI process, the user can ask:
 
+- `/fewer-permission-prompts`
 - `/fewer-permission-prompts doctor`
 - `/fewer-permission-prompts propose`
 - `/fewer-permission-prompts apply`

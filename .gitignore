@@ -6,3 +6,4 @@ codex-fewer-permission-prompts-test.rules*
 build/
 dist/
 tmp*/
+codex-fewer-permission-prompts-verify-*/

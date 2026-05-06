@@ -581,7 +581,7 @@ def load_or_generate_candidates(args: argparse.Namespace) -> list[RuleCandidate]
 
 def cmd_propose(args: argparse.Namespace) -> int:
     candidates = load_or_generate_candidates(args)
-    if args.json:
+    if getattr(args, "json", False):
         print_json({"candidates": [candidate_to_json(item) for item in candidates]})
         return 0
     if not candidates:
@@ -589,6 +589,16 @@ def cmd_propose(args: argparse.Namespace) -> int:
         return 0
     print(render_block(candidates), end="")
     return 0
+
+
+def cmd_default(args: argparse.Namespace) -> int:
+    print("== doctor ==")
+    doctor_args = argparse.Namespace(codex_home=args.codex_home, rules_file=args.rules_file, limit_files=args.limit_files, json=False)
+    status = cmd_doctor(doctor_args)
+    if status:
+        return status
+    print("\n== propose (dry-run) ==")
+    return cmd_propose(args)
 
 
 def candidate_to_json(candidate: RuleCandidate) -> dict:
@@ -669,8 +679,41 @@ def extract_list_field(body: str, field: str) -> list[str]:
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
+    if args.proposal_json:
+        proposal_path = Path(args.proposal_json).expanduser()
+        candidates = candidates_from_json(proposal_path)
+        if args.rules_file:
+            rules = Path(args.rules_file).expanduser()
+            return verify_candidates(rules, candidates, args.verbose)
+        rules = temporary_rules_path(proposal_path)
+        try:
+            rules.write_text(render_block(candidates), encoding="utf-8")
+            return verify_candidates(rules, candidates, args.verbose)
+        finally:
+            try:
+                rules.unlink()
+            except FileNotFoundError:
+                pass
+    if not args.rules_file:
+        print("Provide --rules-file, or pass --proposal-json to verify a dry-run proposal.", file=sys.stderr)
+        return 2
     rules = Path(args.rules_file).expanduser()
-    candidates = candidates_from_json(Path(args.proposal_json).expanduser()) if args.proposal_json else extract_candidates_from_rules(rules)
+    candidates = extract_candidates_from_rules(rules)
+    return verify_candidates(rules, candidates, args.verbose)
+
+
+def temporary_rules_path(proposal_path: Path) -> Path:
+    parent = proposal_path.parent if str(proposal_path.parent) else Path(".")
+    stem = proposal_path.name
+    for index in range(100):
+        suffix = f".verify.{os.getpid()}.{index}.rules"
+        candidate = parent / f"{stem}{suffix}"
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"could not allocate temporary rules file next to {proposal_path}")
+
+
+def verify_candidates(rules: Path, candidates: list[RuleCandidate], verbose: bool) -> int:
     if not candidates:
         print("No verifiable rules found. Provide --proposal-json or a rules file with match/not_match examples.")
         return 1
@@ -681,14 +724,14 @@ def cmd_verify(args: argparse.Namespace) -> int:
             print(f"match     {'ok' if ok else 'FAIL'}  {safe_display(example)}")
             if not ok:
                 failures += 1
-                if args.verbose:
+                if verbose:
                     print(output)
         for example in candidate.not_match:
             ok, output = execpolicy_check(rules, example, should_match=False)
             print(f"not_match {'ok' if ok else 'FAIL'}  {safe_display(example)}")
             if not ok:
                 failures += 1
-                if args.verbose:
+                if verbose:
                     print(output)
     return 1 if failures else 0
 
@@ -804,6 +847,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
+    default = sub.add_parser("default", help="Run the default dry-run workflow: doctor, then propose.")
+    add_proposal_args(default)
+    default.set_defaults(func=cmd_default)
+
     doctor = sub.add_parser("doctor", help="Inspect Codex paths and JSONL shapes without content.")
     add_common_args(doctor)
     doctor.add_argument("--json", action="store_true")
@@ -835,7 +882,7 @@ def build_parser() -> argparse.ArgumentParser:
     propose.set_defaults(func=cmd_propose)
 
     verify = sub.add_parser("verify", help="Verify rules with codex execpolicy check.")
-    verify.add_argument("--rules-file", required=True)
+    verify.add_argument("--rules-file")
     verify.add_argument("--proposal-json")
     verify.add_argument("--verbose", action="store_true")
     verify.set_defaults(func=cmd_verify)
@@ -863,7 +910,9 @@ def normalize_argv(argv: Sequence[str] | None) -> list[str] | None:
     else:
         raw = list(argv)
     if raw and raw[0].lower() in SLASH_ALIASES:
-        raw = raw[1:] or ["propose", "--dry-run"]
+        raw = raw[1:] or ["default"]
+    if not raw:
+        raw = ["default"]
     return raw
 
 

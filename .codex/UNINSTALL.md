@@ -18,6 +18,10 @@ If the Codex environment uses sandbox or approval controls, request approval/esc
 
 If any command fails because of permissions, sandbox write limits, process locks, or junction removal, do not try unrelated workarounds. Ask for approval and rerun the same intended uninstall step.
 
+The package uninstall step intentionally verifies `pip show` and retries because
+editable installs can leave metadata after the first uninstall on some Windows
+Python/pip combinations.
+
 Run this PowerShell block exactly:
 
 ```powershell
@@ -55,6 +59,23 @@ function Remove-ExpectedJunction($path, $targets) {
     throw "Refusing to remove unexpected skill junction: $path"
 }
 
+function Uninstall-PythonPackage($name) {
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        python -m pip show $name *> $null
+        if ($LASTEXITCODE -ne 0) {
+            return
+        }
+        python -m pip uninstall -y $name
+        if ($LASTEXITCODE -ne 0) {
+            throw "pip uninstall failed for $name"
+        }
+    }
+    python -m pip show $name *> $null
+    if ($LASTEXITCODE -eq 0) {
+        throw "pip metadata still exists after uninstall retries: $name"
+    }
+}
+
 if (Test-Path $repoRoot) {
     $env:PYTHONPATH = Join-Path $repoRoot 'src'
     if (Test-Path $rulesFile) {
@@ -62,7 +83,7 @@ if (Test-Path $repoRoot) {
     }
 }
 
-python -m pip uninstall -y codex-fewer-permission-prompts
+Uninstall-PythonPackage 'codex-fewer-permission-prompts'
 
 Remove-ExpectedJunction $skillLink @($legacyParentTarget, $legacyInnerTarget, $skillMirror)
 Remove-ExpectedJunction $legacyNamespace @($legacyParentTarget, $legacyInnerTarget, $skillMirror)

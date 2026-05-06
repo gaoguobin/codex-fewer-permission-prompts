@@ -24,6 +24,7 @@ from codex_fewer_permission_prompts.cli import (
     RuleCandidate,
     backup_file,
     cmd_apply,
+    cmd_verify,
     normalize_argv,
 )
 
@@ -146,8 +147,54 @@ class RuleBlockTests(unittest.TestCase):
                 root.rmdir()
 
     def test_slash_alias_defaults_to_dry_run_propose(self):
-        self.assertEqual(normalize_argv(["/fewer-permission-prompts"]), ["propose", "--dry-run"])
+        self.assertEqual(normalize_argv(["/fewer-permission-prompts"]), ["default"])
+        self.assertEqual(normalize_argv([]), ["default"])
         self.assertEqual(normalize_argv(["/fpp", "doctor"]), ["doctor"])
+
+    def test_verify_proposal_json_uses_temporary_rules_when_rules_file_is_omitted(self):
+        candidate = {
+            "command": "codex --version",
+            "count": 2,
+            "source_kinds": ["test"],
+            "pattern": ["codex", "--version"],
+            "family": "codex-version",
+            "reason": "Codex version check",
+            "match": ["codex --version"],
+            "not_match": ["codex login"],
+        }
+        proposal = Path("test-proposal.json")
+        try:
+            proposal.write_text(json.dumps({"candidates": [candidate]}), encoding="utf-8")
+            args = SimpleNamespace(rules_file=None, proposal_json=str(proposal), verbose=False)
+            output = StringIO()
+            seen_rules = []
+
+            def fake_check(rules, command, should_match):
+                seen_rules.append(Path(rules))
+                return True, "{}"
+
+            with patch.object(fewer_prompts, "execpolicy_check", side_effect=fake_check):
+                with redirect_stdout(output):
+                    status = cmd_verify(args)
+
+            self.assertEqual(status, 0)
+            self.assertIn("match     ok", output.getvalue())
+            self.assertIn("not_match ok", output.getvalue())
+            self.assertEqual(len({path.name for path in seen_rules}), 1)
+            self.assertTrue(seen_rules[0].name.startswith("test-proposal.json.verify."))
+            self.assertFalse(seen_rules[0].exists())
+        finally:
+            if proposal.exists():
+                proposal.unlink()
+
+    def test_verify_requires_rules_file_without_proposal_json(self):
+        args = SimpleNamespace(rules_file=None, proposal_json=None, verbose=False)
+        output = StringIO()
+        with redirect_stdout(StringIO()):
+            with patch("sys.stderr", output):
+                status = cmd_verify(args)
+        self.assertEqual(status, 2)
+        self.assertIn("Provide --rules-file", output.getvalue())
 
 
 class PackagingTests(unittest.TestCase):

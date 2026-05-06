@@ -1,15 +1,30 @@
 ---
 name: codex-fewer-permission-prompts
-description: Codex permission prompts helper for safe prefix_rule proposals, execpolicy verification, dry-run apply, and rollback. Use for fewer permission prompts, Codex rules allowlist cleanup, or /fewer-permission-prompts doctor/propose/apply/verify/rollback.
+description: Codex permission prompts helper for /fewer-permission-prompts default dry-run, safe prefix_rule proposals, execpolicy verification, apply, and rollback.
 ---
 
 Use this skill to reduce repeated approval prompts without weakening Codex's sandbox or approval model. Keep `approval_policy` and `sandbox_mode` intact; work only through official `.rules` files and `prefix_rule(...)`.
+
+## Default Action
+
+When the user invokes this skill with `Codex Fewer Permission Prompts`, `$codex-fewer-permission-prompts`, `/fewer-permission-prompts`, or no subcommand, do not explain what the skill is. Start the dry-run workflow:
+
+```powershell
+python -m codex_fewer_permission_prompts doctor --json
+python -m codex_fewer_permission_prompts propose --dry-run
+```
+
+Summarize the environment status, the candidate count, and the most useful proposed low-risk rules. State clearly that dry-run did not modify files. Do not run `verify` against the current `default.rules` for a dry-run proposal; positive examples are expected not to match until rules are applied. If the user asks to verify a dry-run proposal before applying, write the proposal JSON to a temporary file and run:
+
+```powershell
+python -m codex_fewer_permission_prompts verify --proposal-json <proposal.json>
+```
 
 ## Trigger Patterns
 
 - Natural language: `减少 Codex 权限确认`, `生成低风险 rules 建议`, `清理/验证 Codex allow rules`
 - Lifecycle: install, update, uninstall, doctor, status, scan, propose, apply, verify, rollback
-- Slash-style text: `/fewer-permission-prompts doctor`, `/fewer-permission-prompts propose`, `/fewer-permission-prompts apply`, `/fewer-permission-prompts rollback`
+- Slash-style text: `/fewer-permission-prompts`, `/fewer-permission-prompts doctor`, `/fewer-permission-prompts propose`, `/fewer-permission-prompts apply`, `/fewer-permission-prompts rollback`
 
 Codex currently documents built-in slash commands only. Treat `/fewer-permission-prompts ...` as user text that this skill maps to the matching workflow; do not claim it registers a native Codex slash command.
 
@@ -18,6 +33,8 @@ Codex currently documents built-in slash commands only. Treat `/fewer-permission
 Prefer the installed module:
 
 ```powershell
+python -m codex_fewer_permission_prompts
+python -m codex_fewer_permission_prompts /fewer-permission-prompts
 python -m codex_fewer_permission_prompts doctor
 python -m codex_fewer_permission_prompts status
 python -m codex_fewer_permission_prompts scan
@@ -61,9 +78,10 @@ The CLI also accepts `python -m codex_fewer_permission_prompts /fewer-permission
 ## Command Map
 
 - `doctor` / `status`: locate `CODEX_HOME`, rules files, sessions, history, and logs; summarize JSONL shapes without printing content.
+- default / bare `/fewer-permission-prompts`: run `doctor --json`, then `propose --dry-run`; never writes rules.
 - `scan` / `analyze`: count observed shell commands from Codex session JSONL files.
 - `propose`: classify observed commands and print candidate `prefix_rule(...)` entries with `match` and `not_match` examples.
-- `verify`: run `codex execpolicy check --pretty --rules <rules-file> -- <command...>` for each generated or sentinel rule example.
+- `verify`: run `codex execpolicy check --pretty --rules <rules-file> -- <command...>` for each generated or sentinel rule example. With `--proposal-json` and no `--rules-file`, verify against a temporary rules file generated from the proposal.
 - `apply`: show a unified diff by default. Add `--write` to ask for confirmation, back up the rules file, then append or replace the sentinel block. Use `--yes` only for controlled tests or when the user already approved the exact write.
 - `rollback`: restore the latest backup, restore a named backup, or remove only the sentinel block.
 
