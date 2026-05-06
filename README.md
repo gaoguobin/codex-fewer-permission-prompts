@@ -105,8 +105,9 @@ The outer namespace is `codex-permission-tools` and the bundled Agent Skill is
 `codex-fewer-permission-prompts`, so Codex skill menus can display a non-duplicated
 label such as `Codex Permission Tools: Codex Fewer Permission Prompts`.
 
-After installation, restart Codex App and return to the same conversation, or
-open a new Codex CLI process so skill discovery refreshes.
+After installation, fully restart Codex App and open a new conversation, or
+open a new Codex CLI process so skill discovery refreshes. Existing threads may
+keep a cached skill menu and can still show old labels.
 
 ## Doctor
 
@@ -203,6 +204,10 @@ package, migrates the legacy `~/.agents/skills/codex-fewer-permission-prompts`
 junction to `~/.agents/skills/codex-permission-tools` when needed, and runs
 `doctor`.
 
+After update, fully restart Codex App and open a new conversation, or open a new
+Codex CLI process. Do not use the old update thread to judge whether `/` menu
+labels have refreshed.
+
 ## Uninstall
 
 Paste this into Codex:
@@ -293,7 +298,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/gaoguobin/c
 `codex-fewer-permission-prompts`，这样 Codex 的 skill 菜单可以显示成
 `Codex Permission Tools: Codex Fewer Permission Prompts`，避免重复标题。
 
-安装后需要重启 Codex App 并回到原对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
+安装后需要完全重启 Codex App 并新开一个对话，或新开 CLI 实例，让 Codex 重新扫描 skills。
+旧 thread 可能缓存安装前的 skill 菜单，不适合用来判断 `/` 菜单是否刷新。
 
 ### Doctor
 

@@ -61,6 +61,8 @@ def check_readme() -> None:
         "Safety Model",
         "SkillsMP",
         f"`{SKILL_NAMESPACE}`",
+        "open a new conversation",
+        "旧 thread",
         "not an official OpenAI plugin",
     ]
     for snippet in required:
@@ -125,6 +127,10 @@ def check_codex_docs() -> None:
         text = path.read_text(encoding="utf-8")
         if SKILL_NAMESPACE not in text:
             fail(f".codex/{name} does not mention the non-duplicating skill namespace")
+    for name in ("INSTALL.md", "UPDATE.md"):
+        text = docs[name].read_text(encoding="utf-8")
+        if "旧 thread" not in text or "新开一个对话" not in text:
+            fail(f".codex/{name} must warn that existing threads may cache skill menus")
     update_text = docs["UPDATE.md"].read_text(encoding="utf-8")
     uninstall_text = docs["UNINSTALL.md"].read_text(encoding="utf-8")
     for name, text in (("UPDATE.md", update_text), ("UNINSTALL.md", uninstall_text)):

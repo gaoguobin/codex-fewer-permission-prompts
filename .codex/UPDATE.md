@@ -58,5 +58,5 @@ python -m codex_fewer_permission_prompts doctor --json
 Report the JSON result in the reply. Because update may change skill files, explicitly tell the user:
 
 ```text
-请重启 Codex App 并回到这个对话，或新开 CLI 实例，让它重新扫描 ~/.agents/skills；然后再说“/fewer-permission-prompts doctor”。
+请完全重启 Codex App 后新开一个对话，或新开 CLI 实例，让它重新扫描 ~/.agents/skills；然后再说“/fewer-permission-prompts doctor”。不要用更新时的旧对话判断 / 菜单是否已刷新，因为旧 thread 可能缓存更新前的 skill 列表。
 ```
