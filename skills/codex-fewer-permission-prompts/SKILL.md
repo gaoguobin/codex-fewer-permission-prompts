@@ -3,8 +3,6 @@ name: codex-fewer-permission-prompts
 description: Codex permission prompts helper for safe prefix_rule proposals, execpolicy verification, dry-run apply, and rollback. Use for fewer permission prompts, Codex rules allowlist cleanup, or /fewer-permission-prompts doctor/propose/apply/verify/rollback.
 ---
 
-# Codex Fewer Permission Prompts
-
 Use this skill to reduce repeated approval prompts without weakening Codex's sandbox or approval model. Keep `approval_policy` and `sandbox_mode` intact; work only through official `.rules` files and `prefix_rule(...)`.
 
 ## Trigger Patterns
