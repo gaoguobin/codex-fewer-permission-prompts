@@ -7,4 +7,5 @@ build/
 dist/
 tmp*/
 codex-fewer-permission-prompts-verify-*/
+codex-fewer-permission-prompts-test-*/
 *.verify.*.rules

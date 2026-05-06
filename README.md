@@ -132,6 +132,9 @@ python -m codex_fewer_permission_prompts doctor --json
 `doctor` reports `CODEX_HOME`, the default rules file, whether the sentinel
 block is present, and JSONL shape counts. It does not print transcript content.
 With no CLI subcommand, the tool runs `doctor` followed by `propose --dry-run`.
+If the current rules file already contains matching `prefix_rule(...)` entries,
+dry-run omits those commands from the new candidate list so an installed rule is
+not reported as if it still needs to be added.
 
 ## Dry-run and Propose
 
@@ -178,7 +181,8 @@ python -m codex_fewer_permission_prompts apply --rules-file $HOME\.codex\rules\d
 ```
 
 `apply --write` asks for confirmation, creates a timestamped backup, then writes
-or replaces only the sentinel block.
+the sentinel block. If the block already exists, only new uncovered candidates
+are appended; existing managed rules are left unchanged.
 
 After applying rules, restart Codex App or open a new CLI session so Codex
 reloads `.rules` files.
@@ -346,6 +350,8 @@ python -m codex_fewer_permission_prompts doctor --json
 `doctor` 只输出 `CODEX_HOME`、默认 rules 文件、sentinel block 是否存在、JSONL shape 统计等信息，
 不会打印完整历史对话内容。
 CLI 不带子命令时，会先跑 `doctor`，再跑 `propose --dry-run`。
+如果当前 rules 文件已经有能覆盖某条命令的 `prefix_rule(...)`，dry-run 会把它从新增候选中排除，
+避免把已经生效的规则继续统计成“待添加”。
 
 ### Dry-run / propose
 
@@ -381,8 +387,8 @@ python -m codex_fewer_permission_prompts apply --rules-file $HOME\.codex\rules\d
 python -m codex_fewer_permission_prompts apply --rules-file $HOME\.codex\rules\default.rules --write
 ```
 
-`apply --write` 会先要求确认，再备份目标 `.rules` 文件，只写入或替换
-`codex-fewer-permission-prompts` sentinel block。应用后需要重启 Codex App 或新开 CLI session，让 rules
+`apply --write` 会先要求确认，再备份目标 `.rules` 文件。没有 sentinel block 时会创建；
+已有 sentinel block 时只追加新的未覆盖候选，保留现有托管规则。应用后需要重启 Codex App 或新开 CLI session，让 rules
 重新加载。
 
 ### Verify

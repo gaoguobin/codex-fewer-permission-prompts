@@ -19,6 +19,8 @@ from codex_fewer_permission_prompts.cli import (
     render_block,
     replace_sentinel,
     strip_sentinel,
+    append_to_sentinel,
+    extract_prefix_patterns_from_rules,
     propose_candidates,
     CommandRecord,
     RuleCandidate,
@@ -108,6 +110,61 @@ class RuleBlockTests(unittest.TestCase):
         self.assertIn("match =", block)
         self.assertIn("not_match =", block)
         self.assertIn('pattern = ["codex", "--version"]', block)
+
+    def test_propose_omits_patterns_already_in_rules(self):
+        records = [
+            CommandRecord("git status --short", "codex_session", Path("a.jsonl")),
+            CommandRecord("git status --short", "codex_session", Path("b.jsonl")),
+            CommandRecord("codex --version", "codex_session", Path("c.jsonl")),
+            CommandRecord("codex --version", "codex_session", Path("d.jsonl")),
+        ]
+        rules = Path("test-existing.rules")
+        try:
+            rules.write_text('prefix_rule(pattern=["git", "status"], decision="allow")\n', encoding="utf-8")
+            candidates = propose_candidates(
+                records,
+                rules,
+                min_count=2,
+                max_candidates=5,
+                shell_wrapper="none",
+                exclude_patterns=extract_prefix_patterns_from_rules(rules),
+            )
+        finally:
+            if rules.exists():
+                rules.unlink()
+
+        self.assertEqual([candidate.command for candidate in candidates], ["codex --version"])
+
+    def test_append_to_sentinel_preserves_existing_block(self):
+        existing = RuleCandidate(
+            command="git status --short",
+            count=7,
+            source_kinds=("test",),
+            pattern=("git", "status", "--short"),
+            family="git-status",
+            reason="Git status inspection",
+            match=("git status --short",),
+            not_match=("git commit",),
+        )
+        new = RuleCandidate(
+            command="codex --version",
+            count=2,
+            source_kinds=("test",),
+            pattern=("codex", "--version"),
+            family="codex-version",
+            reason="Codex version check",
+            match=("codex --version",),
+            not_match=("codex login",),
+        )
+
+        updated = append_to_sentinel(render_block([existing]), [new])
+
+        self.assertIn("# observed_count = 7", updated)
+        self.assertIn('pattern = ["git", "status", "--short"]', updated)
+        self.assertIn("# observed_count = 2", updated)
+        self.assertIn('pattern = ["codex", "--version"]', updated)
+        self.assertEqual(updated.count(BEGIN), 1)
+        self.assertEqual(updated.count(END), 1)
 
     def test_apply_defaults_to_dry_run(self):
         candidate = RuleCandidate(

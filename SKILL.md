@@ -14,7 +14,7 @@ python -m codex_fewer_permission_prompts doctor --json
 python -m codex_fewer_permission_prompts propose --dry-run
 ```
 
-Summarize the environment status, the candidate count, and the most useful proposed low-risk rules. State clearly that dry-run did not modify files. Do not run `verify` against the current `default.rules` for a dry-run proposal; positive examples are expected not to match until rules are applied. If the user asks to verify a dry-run proposal before applying, write the proposal JSON to a temporary file and run:
+Summarize the environment status, the new candidate count, and the most useful proposed low-risk rules. Existing matching `prefix_rule(...)` entries in the current rules file are omitted from the dry-run candidate list; if no new candidates remain, say that the existing rules already cover the observed safe commands. State clearly that dry-run did not modify files. Do not run `verify` against the current `default.rules` for a dry-run proposal; positive examples are expected not to match until rules are applied. If the user asks to verify a dry-run proposal before applying, write the proposal JSON to a temporary file and run:
 
 ```powershell
 python -m codex_fewer_permission_prompts verify --proposal-json <proposal.json>
@@ -80,9 +80,9 @@ The CLI also accepts `python -m codex_fewer_permission_prompts /fewer-permission
 - `doctor` / `status`: locate `CODEX_HOME`, rules files, sessions, history, and logs; summarize JSONL shapes without printing content.
 - default / bare `/fewer-permission-prompts`: run `doctor --json`, then `propose --dry-run`; never writes rules.
 - `scan` / `analyze`: count observed shell commands from Codex session JSONL files.
-- `propose`: classify observed commands and print candidate `prefix_rule(...)` entries with `match` and `not_match` examples.
+- `propose`: classify observed commands and print new candidate `prefix_rule(...)` entries with `match` and `not_match` examples, omitting commands already covered by the current rules file.
 - `verify`: run `codex execpolicy check --pretty --rules <rules-file> -- <command...>` for each generated or sentinel rule example. With `--proposal-json` and no `--rules-file`, verify against a temporary rules file generated from the proposal.
-- `apply`: show a unified diff by default. Add `--write` to ask for confirmation, back up the rules file, then append or replace the sentinel block. Use `--yes` only for controlled tests or when the user already approved the exact write.
+- `apply`: show a unified diff by default. Add `--write` to ask for confirmation, back up the rules file, then create the sentinel block or append only new uncovered candidates to it. Use `--yes` only for controlled tests or when the user already approved the exact write.
 - `rollback`: restore the latest backup, restore a named backup, or remove only the sentinel block.
 
 If Codex official docs or local `codex execpolicy check` behavior disagree with this skill, treat the current official docs and local CLI behavior as the source of truth.
